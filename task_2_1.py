@@ -7,12 +7,12 @@
 # Ссылку на саму вакансию.
 # Сайт, откуда собрана вакансия. (можно прописать статично hh.ru или superjob.ru)
 import json
-from typing import re
-
 import requests
 from bs4 import BeautifulSoup
 from pprint import pprint
 import pandas as pd
+from task_2_1_def import salaryinfo
+
 
 params = {
     'area': '1',
@@ -46,7 +46,7 @@ last_page = dom.find('a', {'class': 'bloko-button', 'data-qa': 'pager-page'}).te
 
 vacancyes_list = []
 
-for i in range(0, int(last_page)):
+for i in range(0, int(last_page) +1):
     params = {
         'area': '1',
         'search_field': 'name',
@@ -69,29 +69,15 @@ for i in range(0, int(last_page)):
         name = vacancy.find('a', {'class': 'bloko-link'})
         href = name.get('href')
         name = name.text
-        salary = vacancy.find('span', {'data-qa': 'vacancy-serp__vacancy-compensation', 'class':'bloko-header-section-3'})
-
-        if not salary:
-            salary_min = 0
-            salary_max = 0
-        else:
-            salary = salary.getText().replace(u'\xa0', u'')
-            salaries = salary.split('-')
-            salary_min = salaries[0]
-        if len(salaries) > 1:
-            salary_max = salaries[1]
-        else:
-            salary_max = ''
-
-
+        salarytext = vacancy.find('span', {'data-qa': 'vacancy-serp__vacancy-compensation'})
         vacancy_data['name'] = name
         vacancy_data['href'] = href
-        vacancy_data['salary_min'] = salary_min
-        vacancy_data['salary_max'] = salary_max
+        vacancy_data['salary'] = salaryinfo(salarytext)
+
         vacancyes_list.append(vacancy_data)
 
 pprint(vacancyes_list)
 
-with open('vacancyes.json','w') as vcn:
-    json.dump(vacancyes_list,vcn)
-    pd.read_json('vacancyes.json')
+# with open('vacancyes.json','w') as vcn:
+#     json.dump(vacancyes_list,vcn)
+#     pd.read_json('vacancyes.json')
